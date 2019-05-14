@@ -1,24 +1,22 @@
+# This Dockerfile should be processed from the root directory of the repository like:
+# $ docker build -t toricls/aws-xray-daemon:3.0.0 -f 3.0/Dockerfile .
+
 FROM alpine:3.8 as certs
 RUN apk add -U --no-cache ca-certificates
 
-FROM golang:1.11 as xray-build
+FROM amazonlinux:2 as xray-bin
 ENV XRAY_VERSION=3.0.0
-RUN curl https://glide.sh/get | sh && \
-    curl --location --silent --show-error -O https://github.com/aws/aws-xray-daemon/archive/V${XRAY_VERSION}.tar.gz && \
-    tar -xzvf V${XRAY_VERSION}.tar.gz && \
-    mkdir -p ${GOPATH}/src/github.com/aws && \
-    mv ./aws-xray-daemon-${XRAY_VERSION} ${GOPATH}/src/github.com/aws/aws-xray-daemon
-
-WORKDIR ${GOPATH}/src/github.com/aws/aws-xray-daemon
-
-RUN glide install
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o /xray ./daemon/daemon.go ./daemon/tracing.go
+RUN yum install -y unzip
+RUN curl --location --silent --show-error -O https://s3.dualstack.us-east-2.amazonaws.com/aws-xray-assets.us-east-2/xray-daemon/aws-xray-daemon-linux-${XRAY_VERSION}.zip && \
+    # A 'xray' binary should be extracted in the root directory by the following command
+    unzip aws-xray-daemon-linux-${XRAY_VERSION}.zip
 
 FROM scratch
 WORKDIR /
 EXPOSE 2000/udp
+EXPOSE 2000/tcp
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=xray-build /xray /usr/bin/
+COPY --from=xray-bin /xray /usr/bin/
 ADD ./3.0/cfg.yaml /
 ENTRYPOINT ["/usr/bin/xray", "--config", "/cfg.yaml"]
 # CMD ["--region", "us-west-2"]
