@@ -1,3 +1,6 @@
+# This Dockerfile should be processed from the root directory of the repository like:
+# $ docker build -t toricls/aws-xray-daemon:3.0.0 -f 3.0/Dockerfile .
+
 FROM alpine:3.8 as certs
 RUN apk add -U --no-cache ca-certificates
 
