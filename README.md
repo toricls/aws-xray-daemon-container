@@ -7,8 +7,12 @@ A containerized lightweight AWS X-Ray daemon.
 All pre-built docker images are stored in a Docker Hub repo, [toricls/aws-xray-daemon](https://hub.docker.com/r/toricls/aws-xray-daemon).
 
 You may run this image with some runtime arguments like:
-```
+```shell
+# Just run it
 $ docker run -d toricls/aws-xray-daemon:3.0 --region us-west-2
+
+# Use your own configuration file
+$ docker run -d -v $(pwd)/my-custom-config.yaml:/my/custom/cfg.yaml toricls/aws-xray-daemon:3.0 --config /my/custom/cfg.yaml
 ```
 
 [See all available tags here](https://hub.docker.com/r/toricls/aws-xray-daemon/tags).
